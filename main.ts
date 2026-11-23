@@ -1,8 +1,8 @@
 import { BPS, runBars } from './vendor/makefun-bars.ts';
 import type { BarsState, Batch, OrderInput } from './vendor/makefun-bars.ts';
 
-const LOOKBACK = 45;
-const ENTRY_BPS = 30n; // trailing 45-bar return must be >= +0.30%
+const LOOKBACK = 60;
+const ENTRY_BPS = 50n; // trailing 60-bar return must be >= +0.50%
 const STOP_BPS = 400n; // exit when close <= highWater * (1 - 4%)
 const COOLDOWN_BARS = 30;
 const CASH_FRACTION_NUM = 98n;
@@ -59,10 +59,8 @@ await runBars({
 
       if (holding) {
         if (track.highWater === null || close > track.highWater) track.highWater = close;
-        const ret = trailingReturn(track.closes);
         const stopHit = track.highWater !== null && close * BPS <= track.highWater * (BPS - STOP_BPS);
-        const trendDown = ret !== null && ret < 0n;
-        if (stopHit || trendDown) {
+        if (stopHit) {
           orders.push({ side: 'sell', symbol, qty: position.qty, max_slippage_bps: MAX_SLIPPAGE_BPS });
           track.highWater = null;
           track.exitSeq = state.seq;
